@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pypdf import PdfReader
 import base64
+from typing import Dict
 
 from pydantic import BaseModel
 
@@ -28,7 +29,7 @@ app = FastAPI(title="Word Text Extractor API")
 register_exception(app)
 
 @app.get("/health")
-async def health() -> dict[str, str]:
+async def health() -> Dict[str, str]:
     return {"status": "ok"}
 
 
@@ -60,7 +61,7 @@ def extract_text_from_docx(content: bytes) -> str:
 
 
 @app.post("/extract-text-word")
-async def extract_text_word(file: UploadFile = File(...)) -> dict[str, str]:
+async def extract_text_word(file: UploadFile = File(...)) -> Dict[str, str]:
     filename = file.filename or ""
     if not filename.lower().endswith(".docx"):
         raise HTTPException(
@@ -96,7 +97,7 @@ def extract_text_from_pdf(content: bytes) -> str:
 
 
 @app.post("/extract-text-pdf")
-async def extract_text_pdf(file: UploadFile = File(...)) -> dict[str, str]:
+async def extract_text_pdf(file: UploadFile = File(...)) -> Dict[str, str]:
     filename = file.filename or ""
     if not filename.lower().endswith(".pdf"):
         raise HTTPException(
