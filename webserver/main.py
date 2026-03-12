@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 class Item(BaseModel):
     content: str
+    doc_type: str
 
 
 def register_exception(app: FastAPI):
@@ -119,14 +120,21 @@ async def extract_text_pdf(file: UploadFile = File(...)) -> Dict[str, str]:
 @app.post("/extract-text-base64")
 async def extract_text_base64(item: Item) -> str:
     decoded_content = base64.b64decode(item.content)
-
+    text = None
+    formats = ["pdf", "docx", 'doc']
     if not decoded_content:
-        raise HTTPException(status_code=400, detail="File is empty")
+        raise HTTPException(status_code=400, detail="Decoded file is empty")
 
     try:
-        text = extract_text_from_pdf(decoded_content)
-        print(text)
+        if item.doc_type.lower() == "pdf":
+            text = extract_text_from_pdf(decoded_content)
+            
+        if item.doc_type.lower() in ["docx", 'doc']:
+            text = extract_text_from_docx(decoded_content)
+        
+        if item.doc_type.lower() not in formats:
+            raise ValueError(f"Unsupported document type. Only {', '.join(formats)} are supported.")
+            
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-    return text
+    return text if text is not None and text != "" else "File is empty"
